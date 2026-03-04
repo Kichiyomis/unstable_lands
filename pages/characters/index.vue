@@ -13,11 +13,12 @@
         :class="{ 'entry-card--no-image': !(char.image || char.thumbnail) }"
       >
         <div v-if="char.image || char.thumbnail" class="entry-card__thumb">
-          <NuxtImg
-            :src="(char.thumbnail ?? char.image)!"
+          <img
+            :src="thumbSrc(char)"
             :alt="char.name"
             width="200"
             height="200"
+            loading="lazy"
           />
         </div>
         <div class="entry-card__body">
@@ -31,4 +32,14 @@
 
 <script setup lang="ts">
 const { characters } = useCharacters()
+const config = useRuntimeConfig()
+const baseURL = (config.app?.baseURL ?? '/').replace(/\/$/, '')
+
+function thumbSrc (char: { image?: string; thumbnail?: string }) {
+  const path = (char.thumbnail ?? char.image) ?? ''
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) return path
+  const p = path.startsWith('/') ? path : `/${path}`
+  return baseURL + p
+}
 </script>

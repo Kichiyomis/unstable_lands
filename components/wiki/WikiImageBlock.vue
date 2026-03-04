@@ -3,20 +3,11 @@
     <div class="wiki-image-block__img-wrap">
       <!-- Для путей из public/ используем обычный img, чтобы картинки гарантированно подтягивались -->
       <img
-        v-if="isStaticPath"
         :src="imageSrc"
         :alt="caption || ''"
         class="wiki-image-block__img"
         loading="lazy"
       >
-      <NuxtImg
-        v-else
-        :src="src"
-        :alt="caption || ''"
-        class="wiki-image-block__img"
-        width="800"
-        height="450"
-      />
     </div>
     <figcaption v-if="caption" class="wiki-image-block__caption">
       {{ caption }}
@@ -35,10 +26,9 @@ const props = defineProps<{
 const config = useRuntimeConfig()
 const baseURL = (config.app?.baseURL ?? '/').replace(/\/$/, '')
 
-const isStaticPath = computed(() => typeof props.src === 'string' && (props.src.startsWith('/') || props.src.startsWith('./')))
-
 const imageSrc = computed(() => {
   if (!props.src) return ''
+  if (props.src.startsWith('http://') || props.src.startsWith('https://') || props.src.startsWith('//')) return props.src
   const path = props.src.startsWith('/') ? props.src : `/${props.src}`
   return baseURL + path
 })

@@ -2,7 +2,7 @@
   <article class="wiki-card wiki-card--character">
     <header class="wiki-card__header">
       <div v-if="image" class="wiki-card__image">
-        <NuxtImg :src="image" :alt="name" width="120" height="120" class="wiki-card__img" />
+        <img :src="imageSrc" :alt="name" width="120" height="120" class="wiki-card__img" loading="lazy" />
       </div>
       <div class="wiki-card__meta-wrap">
         <h2 class="wiki-card__title">{{ name }}</h2>
@@ -20,13 +20,22 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   name: string
   role?: string
   status?: string
   image?: string
   summary?: string
 }>()
+
+const config = useRuntimeConfig()
+const baseURL = (config.app?.baseURL ?? '/').replace(/\/$/, '')
+const imageSrc = computed(() => {
+  if (!props.image) return ''
+  if (props.image.startsWith('http://') || props.image.startsWith('https://') || props.image.startsWith('//')) return props.image
+  const path = props.image.startsWith('/') ? props.image : `/${props.image}`
+  return baseURL + path
+})
 </script>
 
 <style scoped>
