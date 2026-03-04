@@ -5,6 +5,12 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-03-04',
   css: ['~/assets/css/main.css'],
   app: {
+    baseURL: '/unstable-lands/',
+  },
+  nitro: {
+    preset: 'github-pages'
+  }
+  app: {
     head: {
       title: 'Нестабильные Земли — Вики',
       meta: [
