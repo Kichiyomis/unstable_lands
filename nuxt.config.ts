@@ -1,7 +1,6 @@
 export default defineNuxtConfig({
   ssr: false,
   devtools: { enabled: true },
-  modules: ['@nuxt/image'],
   compatibilityDate: '2025-03-04',
   css: ['~/assets/css/main.css'],
   nitro: {
@@ -23,4 +22,7 @@ export default defineNuxtConfig({
       ],
     },
   },
+  modules: [
+    '@nuxt/image'
+  ],
 })
