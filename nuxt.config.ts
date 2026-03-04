@@ -8,8 +8,8 @@ export default defineNuxtConfig({
     preset: 'github-pages'
   },
   app: {
+    baseURL: '/unstable-lands/',
     head: {
-      baseURL: '/unstable-lands/',
       title: 'Нестабильные Земли — Вики',
       meta: [
         { charset: 'utf-8' },
