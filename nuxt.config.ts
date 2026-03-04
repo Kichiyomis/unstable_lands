@@ -7,7 +7,9 @@ export default defineNuxtConfig({
     preset: 'github-pages'
   },
   app: {
-    baseURL: '/unstable-lands/',
+    // Для GitHub Pages: должен совпадать с именем репозитория (например unstable_lands).
+    // В CI подставляется через NUXT_APP_BASE_URL из workflow.
+    baseURL: process.env.NUXT_APP_BASE_URL || '/unstable_lands/',
     head: {
       title: 'Нестабильные Земли — Вики',
       meta: [
