@@ -4,8 +4,12 @@ export default defineNuxtConfig({
   modules: ['@nuxt/image'],
   compatibilityDate: '2025-03-04',
   css: ['~/assets/css/main.css'],
+  nitro: {
+    preset: 'github-pages'
+  },
   app: {
     head: {
+      baseURL: '/unstable-lands/',
       title: 'Нестабильные Земли — Вики',
       meta: [
         { charset: 'utf-8' },
