@@ -374,14 +374,12 @@ if (import.meta.client) {
 
 .wiki-entry-intro__body-wrap {
   position: relative;
-  overflow: visible;
 }
 
 .wiki-entry-intro__defs {
   position: absolute;
   width: 0;
   height: 0;
-  overflow: hidden;
 }
 
 .wiki-entry-intro__fog {

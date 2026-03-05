@@ -227,14 +227,21 @@ if (import.meta.client) {
     }
 
     if (bodyEl.value && fogEl.value && enableFog) {
+      let retryCount = 0
+      const maxRetries = 2
       const init = () => {
         buildFogLines()
+        if (lineNodes.length === 0 && retryCount < maxRetries) {
+          retryCount += 1
+          setTimeout(init, retryCount === 1 ? 100 : 280)
+        }
       }
 
+      await nextTick()
       requestAnimationFrame(() => {
-        init()
-        ;(document as any).fonts?.ready?.then(() => {
+        requestAnimationFrame(() => {
           init()
+          ;(document as any).fonts?.ready?.then(() => init())
         })
       })
 
@@ -390,7 +397,6 @@ if (import.meta.client) {
   position: absolute;
   width: 0;
   height: 0;
-  overflow: hidden;
 }
 
 ::global(.wiki-entry-intro__fog-line) {
