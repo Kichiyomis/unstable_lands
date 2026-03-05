@@ -1,31 +1,19 @@
-# Deploy Nuxt to GitHub Pages
-# Если workflow не запускается при пуше:
-# 1. Repo → Settings → Actions → General: разрешите "Allow all actions"
-# 2. Repo → Settings → Pages → Source: выберите "GitHub Actions"
-# 3. Пушите в ветку dev или main (см. on.push.branches ниже)
-# 4. Файл .github/workflows/*.yml должен быть в этой ветке и закоммичен
-#
+# Sample workflow for building and deploying a Nuxt site to GitHub Pages
 name: Deploy Nuxt site to Pages
 
 on:
-  # Запуск при пуше в указанные ветки (должна быть та ветка, в которую вы пушите)
   push:
-    branches: ["dev", "main"]
-
-  # Ручной запуск из вкладки Actions
+    branches: ["dev"]
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Временно отключено: после отмены зависшего run новая очередь могла блокироваться.
-# Раскомментируйте, когда workflow снова начнёт запускаться.
-# concurrency:
-#   group: "pages"
-#   cancel-in-progress: false
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   # Build job
