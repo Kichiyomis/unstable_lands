@@ -81,7 +81,7 @@ export const characters: Character[] = [
   {
     "slug": "rasti",
     "name": "Расти",
-    "role": "Легендарный воин, наёмник, враг О’Киффа",
+    "role": "Легендарный воин, наёмник",
     "status": "Сражается с О’Киффом",
     "image": "/images/characters/okeef-full.jpg",
     "imageCaption": "О’Кифф, Невидимка.",
