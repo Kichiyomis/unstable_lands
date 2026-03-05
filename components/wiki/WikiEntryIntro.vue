@@ -63,7 +63,10 @@ const turbulenceEl = ref<SVGFETurbulenceElement | null>(null)
 const displacementEl = ref<SVGFEDisplacementMapElement | null>(null)
 const isVisible = ref(false)
 
-if (process.client) {
+if (import.meta.client) {
+  const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  const isNarrow = window.innerWidth < 768
+  const enableFog = !prefersReducedMotion && !isNarrow
   let bodyObserver: IntersectionObserver | null = null
   let resizeRaf = 0
   let lineNodes: HTMLElement[] = []
@@ -161,6 +164,7 @@ if (process.client) {
   }
 
   const buildFogLines = () => {
+    if (!enableFog) return
     if (!bodyEl.value || !fogEl.value) return
     clearFog()
 
@@ -192,7 +196,15 @@ if (process.client) {
 
     if (!lines.length) return
 
-    for (const lineData of lines) {
+    // Ограничиваем количество "туманных" линий, чтобы снизить нагрузку
+    const maxLines = 8
+    let effectiveLines = lines
+    if (lines.length > maxLines) {
+      const step = Math.ceil(lines.length / maxLines)
+      effectiveLines = lines.filter((_, index) => index % step === 0).slice(0, maxLines)
+    }
+
+    for (const lineData of effectiveLines) {
       const line = document.createElement('span')
       line.className = 'wiki-entry-intro__fog-line'
 
@@ -251,7 +263,7 @@ if (process.client) {
       isVisible.value = true
     }
 
-    if (bodyEl.value && fogEl.value) {
+    if (bodyEl.value && fogEl.value && enableFog) {
       const init = () => {
         buildIntroFog()
         buildFogLines()
@@ -266,19 +278,10 @@ if (process.client) {
       })
 
       if (gsapLib && turbulenceEl.value) {
+        // Медленное и менее заметное "дыхание" шума, без дополнительной деформации
         noiseTween = gsapLib.to(turbulenceEl.value, {
-          attr: { baseFrequency: '0.018 0.068' },
-          duration: 3.2,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-        })
-      }
-
-      if (gsapLib && displacementEl.value) {
-        displacementTween = gsapLib.to(displacementEl.value, {
-          attr: { scale: 30 },
-          duration: 2.4,
+          attr: { baseFrequency: '0.014 0.052' },
+          duration: 6,
           repeat: -1,
           yoyo: true,
           ease: 'sine.inOut',

@@ -72,6 +72,9 @@ const turbulenceEl = ref<SVGFETurbulenceElement | null>(null)
 const displacementEl = ref<SVGFEDisplacementMapElement | null>(null)
 
 if (import.meta.client) {
+  const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  const isNarrow = window.innerWidth < 768
+  const enableFog = !prefersReducedMotion && !isNarrow
   let bodyObserver: IntersectionObserver | null = null
   let resizeRaf = 0
   let lineNodes: HTMLElement[] = []
@@ -147,6 +150,7 @@ if (import.meta.client) {
   }
 
   const buildFogLines = () => {
+    if (!enableFog) return
     if (!bodyEl.value || !fogEl.value) return
     clearFog()
 
@@ -178,7 +182,15 @@ if (import.meta.client) {
 
     if (!lines.length) return
 
-    for (const lineData of lines) {
+    // Ограничиваем количество линий, чтобы снизить нагрузку
+    const maxLines = 6
+    let effectiveLines = lines
+    if (lines.length > maxLines) {
+      const step = Math.ceil(lines.length / maxLines)
+      effectiveLines = lines.filter((_, index) => index % step === 0).slice(0, maxLines)
+    }
+
+    for (const lineData of effectiveLines) {
       const line = document.createElement('span')
       line.className = 'wiki-entry-intro__fog-line'
 
@@ -222,7 +234,7 @@ if (import.meta.client) {
       gsapLib = null
     }
 
-    if (bodyEl.value && fogEl.value) {
+    if (bodyEl.value && fogEl.value && enableFog) {
       const init = () => {
         buildFogLines()
       }
@@ -234,25 +246,8 @@ if (import.meta.client) {
         })
       })
 
-      if (gsapLib && turbulenceEl.value) {
-        noiseTween = gsapLib.to(turbulenceEl.value, {
-          attr: { baseFrequency: '0.018 0.068' },
-          duration: 3.2,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-        })
-      }
-
-      if (gsapLib && displacementEl.value) {
-        displacementTween = gsapLib.to(displacementEl.value, {
-          attr: { scale: 30 },
-          duration: 2.4,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-        })
-      }
+      // Для карточек персонажей оставляем только разовое движение туманных линий,
+      // без постоянной анимации SVG-фильтра, чтобы не грузить страницу.
 
       const handleResize = () => {
         cancelAnimationFrame(resizeRaf)
