@@ -8,6 +8,8 @@ export interface HistoryEntry {
   image?: string
   /** Подпись к изображению */
   imageCaption?: string
+  /** Группа для фильтров/разделов (например: Хронология, События, Персонажи) */
+  group?: string
 }
 
 export const historyEntries: HistoryEntry[] = [

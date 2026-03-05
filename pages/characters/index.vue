@@ -4,35 +4,64 @@
     <p class="wiki-page-lead">
       Персонажи вселенной «Нестабильные Земли».
     </p>
-    <div class="entry-grid">
-      <NuxtLink
-        v-for="char in characters"
-        :key="char.slug"
-        :to="`/characters/${char.slug}`"
-        class="entry-card"
-        :class="{ 'entry-card--no-image': !(char.image || char.thumbnail) }"
-        v-press-anim
-        v-expand-link
+    <div v-if="groupedCharacters.length" class="wiki-filter-bar">
+      <button
+        type="button"
+        class="wiki-filter-chip"
+        :class="{ 'wiki-filter-chip--active': activeGroup === 'all' }"
+        @click="activeGroup = 'all'"
       >
-        <div
-          class="entry-card__thumb"
-          :class="{ 'entry-card__thumb--empty': !(char.image || char.thumbnail) }"
-        >
-          <img
-            v-if="char.image || char.thumbnail"
-            :src="thumbSrc(char)"
-            :alt="char.name"
-            width="200"
-            height="200"
-            loading="lazy"
-          />
-        </div>
-        <div class="entry-card__body">
-          <h2 class="entry-card__title">{{ char.name }}</h2>
-          <p v-if="char.role" class="entry-card__meta">{{ char.role }}</p>
-        </div>
-      </NuxtLink>
+        Все
+      </button>
+      <button
+        v-for="group in groupedCharacters"
+        :key="group.label"
+        type="button"
+        class="wiki-filter-chip"
+        :class="{ 'wiki-filter-chip--active': activeGroup === group.label }"
+        @click="activeGroup = group.label"
+      >
+        {{ group.label }}
+      </button>
     </div>
+
+    <section
+      v-for="group in groupedCharacters"
+      :key="group.label"
+      v-show="activeGroup === 'all' || activeGroup === group.label"
+      class="wiki-filter-group"
+    >
+      <h2 class="wiki-filter-group-title">{{ group.label }}</h2>
+      <div class="entry-grid">
+        <NuxtLink
+          v-for="char in group.items"
+          :key="char.slug"
+          :to="`/characters/${char.slug}`"
+          class="entry-card"
+          :class="{ 'entry-card--no-image': !(char.image || char.thumbnail) }"
+          v-press-anim
+          v-expand-link
+        >
+          <div
+            class="entry-card__thumb"
+            :class="{ 'entry-card__thumb--empty': !(char.image || char.thumbnail) }"
+          >
+            <img
+              v-if="char.image || char.thumbnail"
+              :src="thumbSrc(char)"
+              :alt="char.name"
+              width="200"
+              height="200"
+              loading="lazy"
+            />
+          </div>
+          <div class="entry-card__body">
+            <h2 class="entry-card__title">{{ char.name }}</h2>
+            <p v-if="char.role" class="entry-card__meta">{{ char.role }}</p>
+          </div>
+        </NuxtLink>
+      </div>
+    </section>
   </article>
 </template>
 
@@ -40,6 +69,41 @@
 const { characters } = useCharacters()
 const config = useRuntimeConfig()
 const baseURL = (config.app?.baseURL ?? '/').replace(/\/$/, '')
+
+const activeGroup = ref<'all' | string>('all')
+
+type CharacterWithGroup = (typeof characters)[number] & { group?: string }
+
+const groupedCharacters = computed(() => {
+  const map = new Map<string, CharacterWithGroup[]>()
+
+  for (const char of characters as CharacterWithGroup[]) {
+    const raw = (char.group ?? '').trim()
+    const label = raw || 'Разное'
+    if (!map.has(label)) {
+      map.set(label, [])
+    }
+    map.get(label)!.push(char)
+  }
+
+  const preferredOrder = ['Сефиры', 'Главные герои', 'Искажённые', 'Разное']
+  const result: { label: string; items: CharacterWithGroup[] }[] = []
+
+  // Сначала выводим заранее известный порядок, если такие группы есть
+  for (const label of preferredOrder) {
+    if (map.has(label)) {
+      result.push({ label, items: map.get(label)! })
+      map.delete(label)
+    }
+  }
+
+  // Остальные — по алфавиту
+  const rest = Array.from(map.entries())
+    .sort(([a], [b]) => a.localeCompare(b, 'ru'))
+    .map(([label, items]) => ({ label, items }))
+
+  return [...result, ...rest]
+})
 
 function thumbSrc (char: { image?: string; thumbnail?: string }) {
   const path = (char.thumbnail ?? char.image) ?? ''

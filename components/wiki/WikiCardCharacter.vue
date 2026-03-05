@@ -182,15 +182,7 @@ if (import.meta.client) {
 
     if (!lines.length) return
 
-    // Ограничиваем количество линий, чтобы снизить нагрузку
-    const maxLines = 6
-    let effectiveLines = lines
-    if (lines.length > maxLines) {
-      const step = Math.ceil(lines.length / maxLines)
-      effectiveLines = lines.filter((_, index) => index % step === 0).slice(0, maxLines)
-    }
-
-    for (const lineData of effectiveLines) {
+    for (const lineData of lines) {
       const line = document.createElement('span')
       line.className = 'wiki-entry-intro__fog-line'
 
@@ -246,23 +238,65 @@ if (import.meta.client) {
         })
       })
 
-      // Для карточек персонажей оставляем только разовое движение туманных линий,
-      // без постоянной анимации SVG-фильтра, чтобы не грузить страницу.
+      const startFilterTweens = () => {
+        if (!gsapLib) return
+        if (turbulenceEl.value && !noiseTween?.isActive?.()) {
+          noiseTween = gsapLib.to(turbulenceEl.value, {
+            attr: { baseFrequency: '0.018 0.068' },
+            duration: 3.2,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+          })
+        }
+        if (displacementEl.value && !displacementTween?.isActive?.()) {
+          displacementTween = gsapLib.to(displacementEl.value, {
+            attr: { scale: 30 },
+            duration: 2.4,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+          })
+        }
+      }
+      const stopFilterTweens = () => {
+        noiseTween?.kill?.()
+        noiseTween = null
+        displacementTween?.kill?.()
+        displacementTween = null
+      }
 
+      const visibilityObserver = bodyWrapEl.value
+        ? new IntersectionObserver(
+            (entries) => {
+              if (entries[0]?.isIntersecting) startFilterTweens()
+              else stopFilterTweens()
+            },
+            { threshold: 0.1, rootMargin: '50px' },
+          )
+        : null
+      if (visibilityObserver && bodyWrapEl.value) visibilityObserver.observe(bodyWrapEl.value)
+
+      let resizeTimeout: ReturnType<typeof setTimeout> | null = null
       const handleResize = () => {
         cancelAnimationFrame(resizeRaf)
-        resizeRaf = requestAnimationFrame(() => {
-          buildFogLines()
-        })
+        if (resizeTimeout) clearTimeout(resizeTimeout)
+        resizeTimeout = setTimeout(() => {
+          resizeRaf = requestAnimationFrame(() => {
+            buildFogLines()
+            resizeTimeout = null
+          })
+        }, 200)
       }
 
       window.addEventListener('resize', handleResize)
 
       onBeforeUnmount(() => {
         window.removeEventListener('resize', handleResize)
+        if (resizeTimeout) clearTimeout(resizeTimeout)
         cancelAnimationFrame(resizeRaf)
-        noiseTween?.kill?.()
-        displacementTween?.kill?.()
+        visibilityObserver?.disconnect?.()
+        stopFilterTweens()
         clearFog()
       })
     }
