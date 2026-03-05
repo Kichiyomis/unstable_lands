@@ -1,8 +1,13 @@
 <template>
-  <figure v-if="src" class="wiki-image-block">
-    <div class="wiki-image-block__img-wrap">
+  <figure v-if="src" ref="rootEl" class="wiki-image-block">
+    <div
+      ref="wrapEl"
+      class="wiki-image-block__img-wrap"
+      :style="wrapperStyle"
+    >
       <!-- Для путей из public/ используем обычный img, чтобы картинки гарантированно подтягивались -->
       <img
+        ref="imgEl"
         :src="imageSrc"
         :alt="caption || ''"
         class="wiki-image-block__img"
@@ -26,12 +31,47 @@ const props = defineProps<{
 const config = useRuntimeConfig()
 const baseURL = (config.app?.baseURL ?? '/').replace(/\/$/, '')
 
+const rootEl = ref<HTMLElement | null>(null)
+const parallaxOffset = ref(0)
+
 const imageSrc = computed(() => {
   if (!props.src) return ''
   if (props.src.startsWith('http://') || props.src.startsWith('https://') || props.src.startsWith('//')) return props.src
   const path = props.src.startsWith('/') ? props.src : `/${props.src}`
   return baseURL + path
 })
+
+const wrapperStyle = computed(() => ({
+  transform: `translateY(${parallaxOffset.value}px)`,
+}))
+
+if (process.client) {
+  const updateParallax = () => {
+    if (!rootEl.value) return
+    const rect = rootEl.value.getBoundingClientRect()
+    const vh = window.innerHeight || 1
+
+    if (rect.bottom < 0 || rect.top > vh) {
+      return
+    }
+
+    const center = rect.top + rect.height / 2
+    const factor = (center - vh / 2) / vh // -0.5 .. 0.5
+    const maxOffset = 18
+    parallaxOffset.value = -factor * maxOffset
+  }
+
+  onMounted(() => {
+    updateParallax()
+    window.addEventListener('scroll', updateParallax, { passive: true })
+    window.addEventListener('resize', updateParallax)
+  })
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('scroll', updateParallax)
+    window.removeEventListener('resize', updateParallax)
+  })
+}
 </script>
 
 <style scoped>
@@ -48,6 +88,11 @@ const imageSrc = computed(() => {
   overflow: hidden;
   border: 1px solid var(--color-border-muted);
   background: var(--color-surface);
+  /* «дыхание» свечения вокруг рамки — управляется JS-переменной --glow-breath */
+  box-shadow: 0 0 calc(18px * var(--glow-breath, 1)) rgba(25, 40, 72, 0.35);
+  transition:
+    transform 0.25s ease-out,
+    box-shadow 0.4s ease-in-out;
 }
 
 .wiki-image-block__img {
@@ -56,6 +101,7 @@ const imageSrc = computed(() => {
   display: block;
   object-fit: cover;
   object-position: center;
+  transition: transform 0.25s ease-out;
 }
 
 .wiki-image-block__caption {

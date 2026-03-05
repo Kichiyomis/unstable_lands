@@ -5,9 +5,11 @@
       :src="entry.image"
       :caption="entry.imageCaption"
     />
-    <h1 class="wiki-page-title">{{ entry.name }}</h1>
-    <p class="wiki-page-lead">{{ entry.short }}</p>
-    <div class="wiki-prose wiki-prose--html" v-html="entry.description" />
+    <WikiEntryIntro
+      :title="entry.name"
+      :lead="entry.short"
+      :description="entry.description"
+    />
   </article>
   <article v-else class="wiki-page">
     <h1 class="wiki-page-title">Не найдено</h1>

@@ -1,5 +1,5 @@
 <template>
-  <header class="header">
+  <header class="header" :class="{ 'header--hidden': isHidden }">
     <div class="header__inner container">
       <NuxtLink to="/" class="header__brand">
         <span class="header__title">Нестабильные Земли</span>
@@ -53,6 +53,42 @@ const router = useRouter()
 const query = ref('')
 
 const open = ref(false)
+const isHidden = ref(false)
+
+let lastScrollY = 0
+let ticking = false
+
+const handleScroll = () => {
+  const currentY = window.scrollY || 0
+  const delta = currentY - lastScrollY
+
+  if (currentY > 120 && delta > 6) {
+    isHidden.value = true
+  } else if (delta < -6) {
+    isHidden.value = false
+  }
+
+  lastScrollY = currentY
+  ticking = false
+}
+
+if (process.client) {
+  onMounted(() => {
+    lastScrollY = window.scrollY || 0
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(handleScroll)
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('scroll', onScroll)
+    })
+  })
+}
 
 function onSearch () {
   const q = query.value.trim()
@@ -71,6 +107,11 @@ function onSearch () {
   background: var(--color-bg-elevated);
   border-bottom: 1px solid var(--color-border);
   box-shadow: var(--shadow);
+  transition: transform 0.26s ease-out, background var(--transition), box-shadow var(--transition);
+}
+
+.header--hidden {
+  transform: translateY(-100%);
 }
 
 .header__inner {

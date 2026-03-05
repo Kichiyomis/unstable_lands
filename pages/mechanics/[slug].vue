@@ -5,9 +5,11 @@
       :src="mechanic.image"
       :caption="mechanic.imageCaption"
     />
-    <h1 class="wiki-page-title">{{ mechanic.name }}</h1>
-    <p class="wiki-page-lead">{{ mechanic.short }}</p>
-    <div class="wiki-prose wiki-prose--html" v-html="mechanic.description" />
+    <WikiEntryIntro
+      :title="mechanic.name"
+      :lead="mechanic.short"
+      :description="mechanic.description"
+    />
   </article>
   <article v-else class="wiki-page">
     <h1 class="wiki-page-title">Не найдено</h1>

@@ -10,6 +10,8 @@
         :key="m.slug"
         :to="`/mechanics/${m.slug}`"
         class="section-card"
+        v-press-anim
+        v-expand-link
       >
         <h3 class="section-card__title">{{ m.name }}</h3>
         <p class="section-card__desc">{{ m.short }}</p>

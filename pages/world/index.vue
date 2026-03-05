@@ -10,6 +10,8 @@
         :key="e.slug"
         :to="`/world/${e.slug}`"
         class="section-card"
+        v-press-anim
+        v-expand-link
       >
         <h3 class="section-card__title">{{ e.name }}</h3>
         <p class="section-card__desc">{{ e.short }}</p>

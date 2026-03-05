@@ -1,27 +1,27 @@
 <template>
-  <article class="wiki-card wiki-card--character" v-tilt="{ max: 3 }">
-    <header class="wiki-card__header">
-      <div v-if="image" class="wiki-card__image">
-        <img :src="imageSrc" :alt="name" width="120" height="120" class="wiki-card__img" loading="lazy" />
-      </div>
-      <div class="wiki-card__meta-wrap">
-        <h2 class="wiki-card__title">{{ name }}</h2>
-        <p v-if="role" class="wiki-card__meta">{{ role }}</p>
-        <p v-if="status" class="wiki-card__status">
-          <span class="wiki-card__status-label">Статус:</span> {{ status }}
-        </p>
-      </div>
-    </header>
-    <div ref="bodyWrapEl" class="wiki-card__body-wrap">
-      <div ref="bodyEl" class="wiki-card__body">
-        <div v-if="summary" class="wiki-card__summary">
-          {{ summary }}
-        </div>
-        <slot />
-      </div>
-      <div ref="fogEl" class="wiki-card__fog" aria-hidden="true" />
+  <section
+    ref="rootEl"
+    class="wiki-entry-intro"
+    :class="{ 'wiki-entry-intro--visible': isVisible }"
+  >
+    <h1 class="wiki-page-title wiki-entry-intro__line wiki-entry-intro__title">
+      {{ title }}
+    </h1>
+    <p v-if="meta" class="wiki-meta wiki-entry-intro__line wiki-entry-intro__meta">
+      {{ meta }}
+    </p>
+    <p v-if="lead" class="wiki-page-lead wiki-entry-intro__line wiki-entry-intro__lead">
+      {{ lead }}
+    </p>
+    <div v-if="description" ref="bodyWrapEl" class="wiki-entry-intro__body-wrap">
+      <div
+        ref="bodyEl"
+        class="wiki-prose wiki-prose--html wiki-entry-intro__body"
+        v-html="description"
+      />
+      <div ref="fogEl" class="wiki-entry-intro__fog" aria-hidden="true" />
     </div>
-    <svg class="wiki-card__fog-defs" aria-hidden="true">
+    <svg class="wiki-entry-intro__defs" aria-hidden="true">
       <defs>
         <filter id="wiki-fog-noise" x="-30%" y="-30%" width="160%" height="160%">
           <feTurbulence
@@ -44,37 +44,30 @@
         </filter>
       </defs>
     </svg>
-  </article>
+  </section>
 </template>
 
 <script setup lang="ts">
 const props = defineProps<{
-  name: string
-  role?: string
-  status?: string
-  image?: string
-  summary?: string
+  title: string
+  meta?: string
+  lead?: string
+  description?: string
 }>()
 
-const config = useRuntimeConfig()
-const baseURL = (config.app?.baseURL ?? '/').replace(/\/$/, '')
-const imageSrc = computed(() => {
-  if (!props.image) return ''
-  if (props.image.startsWith('http://') || props.image.startsWith('https://') || props.image.startsWith('//')) return props.image
-  const path = props.image.startsWith('/') ? props.image : `/${props.image}`
-  return baseURL + path
-})
-
+const rootEl = ref<HTMLElement | null>(null)
 const bodyWrapEl = ref<HTMLElement | null>(null)
 const bodyEl = ref<HTMLElement | null>(null)
 const fogEl = ref<HTMLElement | null>(null)
 const turbulenceEl = ref<SVGFETurbulenceElement | null>(null)
 const displacementEl = ref<SVGFEDisplacementMapElement | null>(null)
+const isVisible = ref(false)
 
-if (import.meta.client) {
+if (process.client) {
   let bodyObserver: IntersectionObserver | null = null
   let resizeRaf = 0
   let lineNodes: HTMLElement[] = []
+  let introFogLine: HTMLElement | null = null
   let gsapLib: any = null
   let noiseTween: any = null
   let displacementTween: any = null
@@ -82,6 +75,10 @@ if (import.meta.client) {
   const clearFog = () => {
     bodyObserver?.disconnect()
     bodyObserver = null
+    if (introFogLine) {
+      introFogLine.remove()
+      introFogLine = null
+    }
     lineNodes.forEach(node => node.remove())
     lineNodes = []
   }
@@ -100,6 +97,7 @@ if (import.meta.client) {
     const blobs = Array.from(line.querySelectorAll('.wiki-entry-intro__fog-blob')) as HTMLElement[]
 
     if (!gsapLib) {
+      // Без GSAP просто мгновенно убираем линию, чтобы не мешать чтению
       line.remove()
       return
     }
@@ -144,6 +142,22 @@ if (import.meta.client) {
         0.05 * index,
       )
     })
+  }
+
+  const buildIntroFog = () => {
+    if (!rootEl.value || !bodyWrapEl.value || !fogEl.value || introFogLine) return
+
+    const rootRect = rootEl.value.getBoundingClientRect()
+    const bodyRect = bodyWrapEl.value.getBoundingClientRect()
+
+    const top = 0
+    const bottom = bodyRect.top - rootRect.top
+    if (bottom <= 0) return
+
+    const padX = 80
+    const extraY = 24
+    const height = bottom + extraY
+    const width = rootRect.width + padX * 2
   }
 
   const buildFogLines = () => {
@@ -222,11 +236,28 @@ if (import.meta.client) {
       gsapLib = null
     }
 
+    if (rootEl.value && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting) {
+            isVisible.value = true
+            observer.disconnect()
+          }
+        },
+        { threshold: 0.2 },
+      )
+      observer.observe(rootEl.value)
+    } else {
+      isVisible.value = true
+    }
+
     if (bodyEl.value && fogEl.value) {
       const init = () => {
+        buildIntroFog()
         buildFogLines()
       }
 
+      // Ждём кадр и загрузку шрифтов, чтобы получить корректные реальные строки.
       requestAnimationFrame(() => {
         init()
         ;(document as any).fonts?.ready?.then(() => {
@@ -276,80 +307,55 @@ if (import.meta.client) {
 </script>
 
 <style scoped>
-.wiki-card--character {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border-muted);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  margin-bottom: var(--space-4);
-  transition:
-    transform 0.18s ease-out,
-    box-shadow 0.18s ease-out,
-    border-color var(--transition),
-    background var(--transition);
-}
-
-.wiki-card__header {
-  display: flex;
-  gap: var(--space-4);
-  margin-bottom: var(--space-3);
-}
-
-.wiki-card__image {
-  flex-shrink: 0;
-}
-
-.wiki-card__img {
-  width: 120px;
-  height: 120px;
-  object-fit: cover;
-  border-radius: var(--radius);
-  border: 1px solid var(--color-border);
-}
-
-.wiki-card__meta-wrap {
-  flex: 1;
-  min-width: 0;
-}
-
-.wiki-card__title {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--color-light);
-  margin: 0 0 var(--space-1);
-  line-height: 1.3;
-}
-
-.wiki-card__meta,
-.wiki-card__status {
-  font-family: var(--font-ui);
-  font-size: 0.8125rem;
-  color: var(--color-argalius-bright);
-  margin: var(--space-1) 0 0;
-}
-
-.wiki-card__status-label {
-  color: var(--color-text-muted);
-}
-
-.wiki-card__summary {
-  font-size: 1rem;
-  line-height: 1.6;
-  color: var(--color-text);
-}
-
-.wiki-card__body-wrap {
+.wiki-entry-intro {
   position: relative;
-  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
-.wiki-card__body {
+.wiki-entry-intro--visible .wiki-entry-intro__meta {
+  animation-delay: 0.04s;
+}
+
+.wiki-entry-intro--visible .wiki-entry-intro__lead {
+  animation-delay: 0.08s;
+}
+
+.wiki-entry-intro--visible .wiki-entry-intro__body {
+  animation-delay: 0.12s;
+}
+
+.wiki-entry-intro__title {
+  position: relative;
+}
+
+.wiki-entry-intro__meta {
+  opacity: 0.9;
+}
+
+.wiki-entry-intro__lead {
+  position: relative;
+}
+
+:global(.wiki-entry-intro__body) {
+  margin-top: var(--space-3);
   position: relative;
   z-index: 1;
 }
 
-.wiki-card__fog {
+.wiki-entry-intro__body-wrap {
+  position: relative;
+  overflow: visible;
+}
+
+.wiki-entry-intro__defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.wiki-entry-intro__fog {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -357,14 +363,7 @@ if (import.meta.client) {
   overflow: visible;
 }
 
-.wiki-card__fog-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
-
-::global(.wiki-entry-intro__fog-line) {
+:global(.wiki-entry-intro__fog-line) {
   position: relative;
   display: block;
   position: absolute;
@@ -384,7 +383,7 @@ if (import.meta.client) {
     );
 }
 
-::global(.wiki-entry-intro__fog-blob) {
+:global(.wiki-entry-intro__fog-blob) {
   position: absolute;
   border-radius: 999px;
   pointer-events: none;
@@ -392,24 +391,25 @@ if (import.meta.client) {
   filter: blur(8px);
 }
 
-::global(.wiki-entry-intro__fog-blob--1) {
+:global(.wiki-entry-intro__fog-blob--1) {
   left: -8%;
   top: 6%;
   width: 48%;
   height: 86%;
 }
 
-::global(.wiki-entry-intro__fog-blob--2) {
+:global(.wiki-entry-intro__fog-blob--2) {
   left: 28%;
   top: -10%;
   width: 36%;
   height: 120%;
 }
 
-::global(.wiki-entry-intro__fog-blob--3) {
+:global(.wiki-entry-intro__fog-blob--3) {
   left: 62%;
   top: 8%;
   width: 44%;
   height: 84%;
 }
 </style>
+

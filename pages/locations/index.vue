@@ -10,6 +10,8 @@
         :key="loc.slug"
         :to="`/locations/${loc.slug}`"
         class="section-card"
+        v-press-anim
+        v-expand-link
       >
         <h3 class="section-card__title">{{ loc.name }}</h3>
         <p v-if="loc.type" class="section-card__meta">{{ loc.type }}</p>

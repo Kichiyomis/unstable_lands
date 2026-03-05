@@ -5,10 +5,12 @@
       :src="location.image"
       :caption="location.imageCaption"
     />
-    <h1 class="wiki-page-title">{{ location.name }}</h1>
-    <p v-if="location.type" class="wiki-meta">{{ location.type }}</p>
-    <p class="wiki-page-lead">{{ location.short }}</p>
-    <div class="wiki-prose wiki-prose--html" v-html="location.description" />
+    <WikiEntryIntro
+      :title="location.name"
+      :meta="location.type"
+      :lead="location.short"
+      :description="location.description"
+    />
   </article>
   <article v-else class="wiki-page">
     <h1 class="wiki-page-title">Не найдено</h1>

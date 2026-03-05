@@ -10,6 +10,8 @@
         :key="e.slug"
         :to="`/history/${e.slug}`"
         class="section-card"
+        v-press-anim
+        v-expand-link
       >
         <h3 class="section-card__title">{{ e.name }}</h3>
         <p v-if="e.years" class="section-card__meta">{{ e.years }}</p>

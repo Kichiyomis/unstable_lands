@@ -11,9 +11,15 @@
         :to="`/characters/${char.slug}`"
         class="entry-card"
         :class="{ 'entry-card--no-image': !(char.image || char.thumbnail) }"
+        v-press-anim
+        v-expand-link
       >
-        <div v-if="char.image || char.thumbnail" class="entry-card__thumb">
+        <div
+          class="entry-card__thumb"
+          :class="{ 'entry-card__thumb--empty': !(char.image || char.thumbnail) }"
+        >
           <img
+            v-if="char.image || char.thumbnail"
             :src="thumbSrc(char)"
             :alt="char.name"
             width="200"
