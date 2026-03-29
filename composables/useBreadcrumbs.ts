@@ -11,6 +11,7 @@ const pathTitles: Record<string, string> = {
   locations: 'Локации',
   history: 'История',
   mechanics: 'Механики',
+  goods: 'Товары',
   search: 'Поиск',
 }
 

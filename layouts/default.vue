@@ -10,7 +10,7 @@
     <footer class="footer">
       <div class="wiki-content footer__inner">
         <p class="footer__text">
-          Вики кампании «Нестабильные Земли». Мир, персонажи, локации, история и механики.
+          Вики кампании «Нестабильные Земли». Мир, персонажи, локации, история, механики и товары.
         </p>
         <NuxtLink to="/" class="footer__link">На главную</NuxtLink>
       </div>

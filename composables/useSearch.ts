@@ -3,8 +3,15 @@ import { mechanics } from '~/data/mechanics'
 import { historyEntries } from '~/data/history'
 import { locations } from '~/data/locations'
 import { worldEntries } from '~/data/world'
+import { tradeGoods } from '~/data/goods'
 
-export type SearchResultType = 'character' | 'mechanic' | 'history' | 'location' | 'world'
+export type SearchResultType =
+  | 'character'
+  | 'mechanic'
+  | 'history'
+  | 'location'
+  | 'world'
+  | 'goods'
 
 export interface SearchResult {
   type: SearchResultType
@@ -115,6 +122,21 @@ export function useSearch () {
           title: l.name,
           path: `/locations/${l.slug}`,
           snippet: inName ? l.short : excerpt(l.description, q),
+        })
+      }
+    }
+
+    for (const g of tradeGoods) {
+      const inName = normalize(g.name).includes(nq)
+      const inEffect = normalize(g.effect).includes(nq)
+      const inActivation = normalize(g.activation).includes(nq)
+      if (inName || inEffect || inActivation) {
+        results.push({
+          type: 'goods',
+          typeLabel: 'Товар',
+          title: g.name,
+          path: `/goods#item-${g.id}`,
+          snippet: inName ? g.effect.slice(0, 120) + (g.effect.length > 120 ? '…' : '') : excerpt(g.effect, q),
         })
       }
     }

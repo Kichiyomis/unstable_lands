@@ -11,6 +11,7 @@ export function useNavigation () {
     { title: 'Локации', path: '/locations' },
     { title: 'История', path: '/history' },
     { title: 'Механики', path: '/mechanics' },
+    { title: 'Товары', path: '/goods' },
   ]
 
   return { navItems }

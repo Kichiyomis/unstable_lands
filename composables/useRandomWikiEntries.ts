@@ -21,6 +21,7 @@ function shuffle<T> (arr: T[]): T[] {
 
 export function useRandomWikiEntries (count: number = 5) {
   const all: WikiEntryLink[] = [
+    { path: '/goods', title: 'Одноразовые товары', typeLabel: 'Товары' },
     ...worldEntries.map(w => ({ path: `/world/${w.slug}`, title: w.name, typeLabel: 'Мир' })),
     ...characters.map(c => ({ path: `/characters/${c.slug}`, title: c.name, typeLabel: 'Персонаж' })),
     ...mechanics.map(m => ({ path: `/mechanics/${m.slug}`, title: m.name, typeLabel: 'Механика' })),

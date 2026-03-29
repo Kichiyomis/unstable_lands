@@ -34,6 +34,10 @@
           <h3 class="section-card__title">Механики</h3>
           <p class="section-card__desc">Хобби (Пока что)</p>
         </NuxtLink>
+        <NuxtLink to="/goods" class="section-card" v-tilt v-press-anim v-expand-link>
+          <h3 class="section-card__title">Товары</h3>
+          <p class="section-card__desc">Одноразовые предметы и расходники</p>
+        </NuxtLink>
       </div>
     </section>
 
