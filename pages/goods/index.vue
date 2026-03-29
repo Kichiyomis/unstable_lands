@@ -237,7 +237,7 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-4);
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .goods-filters__block {
