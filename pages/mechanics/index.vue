@@ -1,5 +1,6 @@
 <template>
   <article class="wiki-page">
+    <p class="mem-id">MEM://mechanics</p>
     <h1 class="wiki-page-title">Механики</h1>
     <p class="wiki-page-lead">
       Игровые системы и правила сеттинга. Выберите механику для подробного описания.

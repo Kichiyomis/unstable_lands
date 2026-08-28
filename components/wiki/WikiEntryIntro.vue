@@ -4,6 +4,7 @@
     class="wiki-entry-intro"
     :class="{ 'wiki-entry-intro--visible': isVisible }"
   >
+    <WikiToc />
     <h1 class="wiki-page-title wiki-entry-intro__line wiki-entry-intro__title">
       {{ title }}
     </h1>
@@ -66,7 +67,7 @@ const isVisible = ref(false)
 if (import.meta.client) {
   const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
   const isNarrow = window.innerWidth < 768
-  const enableFog = !prefersReducedMotion && !isNarrow
+  const enableFog = !prefersReducedMotion && !isNarrow && document.documentElement.dataset.intensity === 'spectacle'
   let bodyObserver: IntersectionObserver | null = null
   let resizeRaf = 0
   let lineNodes: HTMLElement[] = []

@@ -1,3 +1,4 @@
+import Fuse from 'fuse.js'
 import { characters } from '~/data/characters'
 import { mechanics } from '~/data/mechanics'
 import { historyEntries } from '~/data/history'
@@ -19,13 +20,19 @@ export interface SearchResult {
   title: string
   path: string
   snippet: string
+  slug?: string
+  haystack?: string
 }
 
-function normalize (s: string): string {
-  return s
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
+const CYR_TO_LAT: Record<string, string> = {
+  а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z',
+  и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r',
+  с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'sch',
+  ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya',
+}
+
+function translit (value: string): string {
+  return value.toLowerCase().split('').map(ch => CYR_TO_LAT[ch] ?? ch).join('')
 }
 
 function stripHtml (html: string): string {
@@ -34,9 +41,8 @@ function stripHtml (html: string): string {
 
 function excerpt (text: string, query: string, maxLen: number = 120): string {
   const plain = stripHtml(text)
-  const n = normalize(plain)
-  const q = normalize(query)
-  const i = n.indexOf(q)
+  const q = query.toLowerCase()
+  const i = plain.toLowerCase().indexOf(q)
   if (i < 0) return plain.slice(0, maxLen) + (plain.length > maxLen ? '…' : '')
   const start = Math.max(0, i - 40)
   const end = Math.min(plain.length, i + query.length + 80)
@@ -44,104 +50,121 @@ function excerpt (text: string, query: string, maxLen: number = 120): string {
   return (start > 0 ? '…' : '') + slice + (end < plain.length ? '…' : '')
 }
 
+function buildIndex (): SearchResult[] {
+  const results: SearchResult[] = []
+
+  for (const c of characters) {
+    const body = [c.description, c.appearance, c.biography, c.summary].filter(Boolean).join(' ')
+    results.push({
+      type: 'character',
+      typeLabel: 'Персонаж',
+      title: c.name,
+      slug: c.slug,
+      path: `/characters/${c.slug}`,
+      snippet: c.summary,
+      haystack: [c.name, c.slug, c.role, c.status, c.summary, stripHtml(body).slice(0, 400)].filter(Boolean).join(' '),
+    })
+  }
+  for (const w of worldEntries) {
+    results.push({
+      type: 'world',
+      typeLabel: 'Мир',
+      title: w.name,
+      slug: w.slug,
+      path: `/world/${w.slug}`,
+      snippet: w.short,
+      haystack: stripHtml([w.name, w.slug, w.short, w.description.slice(0, 400)].join(' ')),
+    })
+  }
+  for (const m of mechanics) {
+    results.push({
+      type: 'mechanic',
+      typeLabel: 'Механика',
+      title: m.name,
+      slug: m.slug,
+      path: `/mechanics/${m.slug}`,
+      snippet: m.short,
+      haystack: stripHtml([m.name, m.slug, m.short, m.description.slice(0, 400)].join(' ')),
+    })
+  }
+  for (const e of historyEntries) {
+    results.push({
+      type: 'history',
+      typeLabel: 'История',
+      title: e.name,
+      slug: e.slug,
+      path: `/history/${e.slug}`,
+      snippet: e.short,
+      haystack: stripHtml([e.name, e.slug, e.years, e.short, e.description.slice(0, 400)].filter(Boolean).join(' ')),
+    })
+  }
+  for (const l of locations) {
+    results.push({
+      type: 'location',
+      typeLabel: 'Локация',
+      title: l.name,
+      slug: l.slug,
+      path: `/locations/${l.slug}`,
+      snippet: l.short,
+      haystack: stripHtml([l.name, l.slug, l.type, l.short, l.description.slice(0, 400)].filter(Boolean).join(' ')),
+    })
+  }
+  for (const g of tradeGoods) {
+    results.push({
+      type: 'goods',
+      typeLabel: 'Товар',
+      title: g.name,
+      path: `/goods#item-${g.id}`,
+      snippet: g.effect.slice(0, 120) + (g.effect.length > 120 ? '…' : ''),
+      haystack: [g.name, g.effect, g.activation, g.rarity].join(' '),
+    })
+  }
+
+  return results
+}
+
+let catalog: SearchResult[] = []
+let fuse: Fuse<SearchResult> | null = null
+
+export function getSearchCatalog (): SearchResult[] {
+  if (!catalog.length) catalog = buildIndex()
+  return catalog
+}
+
+function getFuse () {
+  if (!fuse) {
+    fuse = new Fuse(getSearchCatalog(), {
+      keys: [
+        { name: 'title', weight: 0.45 },
+        { name: 'slug', weight: 0.35 },
+        { name: 'haystack', weight: 0.2 },
+      ],
+      threshold: 0.32,
+      ignoreLocation: true,
+      minMatchCharLength: 2,
+    })
+  }
+  return fuse
+}
+
 export function useSearch () {
   function search (query: string): SearchResult[] {
     const q = query.trim()
     if (!q) return []
-    const nq = normalize(q)
-    const results: SearchResult[] = []
-
-    for (const c of characters) {
-      const inName = normalize(c.name).includes(nq)
-      const inSummary = normalize(c.summary).includes(nq)
-      const inDesc = c.description && normalize(stripHtml(c.description)).includes(nq)
-      if (inName || inSummary || inDesc) {
-        results.push({
-          type: 'character',
-          typeLabel: 'Персонаж',
-          title: c.name,
-          path: `/characters/${c.slug}`,
-          snippet: inName ? c.summary : excerpt((c.description || c.summary), q),
-        })
+    const queries = Array.from(new Set([q, translit(q)].filter(s => s.length >= 2)))
+    const seen = new Set<string>()
+    const out: SearchResult[] = []
+    const fuseIndex = getFuse()
+    for (const term of queries) {
+      for (const r of fuseIndex.search(term, { limit: 24 })) {
+        if (seen.has(r.item.path)) continue
+        seen.add(r.item.path)
+        const item = { ...r.item }
+        if (item.haystack) item.snippet = excerpt(item.haystack, q)
+        out.push(item)
       }
     }
-
-    for (const w of worldEntries) {
-      const inName = normalize(w.name).includes(nq)
-      const inShort = normalize(w.short).includes(nq)
-      const inDesc = normalize(stripHtml(w.description)).includes(nq)
-      if (inName || inShort || inDesc) {
-        results.push({
-          type: 'world',
-          typeLabel: 'Мир',
-          title: w.name,
-          path: `/world/${w.slug}`,
-          snippet: inName ? w.short : excerpt(w.description, q),
-        })
-      }
-    }
-
-    for (const m of mechanics) {
-      const inName = normalize(m.name).includes(nq)
-      const inShort = normalize(m.short).includes(nq)
-      const inDesc = normalize(stripHtml(m.description)).includes(nq)
-      if (inName || inShort || inDesc) {
-        results.push({
-          type: 'mechanic',
-          typeLabel: 'Механика',
-          title: m.name,
-          path: `/mechanics/${m.slug}`,
-          snippet: inName ? m.short : excerpt(m.description, q),
-        })
-      }
-    }
-
-    for (const e of historyEntries) {
-      const inName = normalize(e.name).includes(nq)
-      const inShort = normalize(e.short).includes(nq)
-      const inDesc = normalize(stripHtml(e.description)).includes(nq)
-      if (inName || inShort || inDesc) {
-        results.push({
-          type: 'history',
-          typeLabel: 'История',
-          title: e.name,
-          path: `/history/${e.slug}`,
-          snippet: inName ? e.short : excerpt(e.description, q),
-        })
-      }
-    }
-
-    for (const l of locations) {
-      const inName = normalize(l.name).includes(nq)
-      const inShort = normalize(l.short).includes(nq)
-      const inDesc = normalize(stripHtml(l.description)).includes(nq)
-      if (inName || inShort || inDesc) {
-        results.push({
-          type: 'location',
-          typeLabel: 'Локация',
-          title: l.name,
-          path: `/locations/${l.slug}`,
-          snippet: inName ? l.short : excerpt(l.description, q),
-        })
-      }
-    }
-
-    for (const g of tradeGoods) {
-      const inName = normalize(g.name).includes(nq)
-      const inEffect = normalize(g.effect).includes(nq)
-      const inActivation = normalize(g.activation).includes(nq)
-      if (inName || inEffect || inActivation) {
-        results.push({
-          type: 'goods',
-          typeLabel: 'Товар',
-          title: g.name,
-          path: `/goods#item-${g.id}`,
-          snippet: inName ? g.effect.slice(0, 120) + (g.effect.length > 120 ? '…' : '') : excerpt(g.effect, q),
-        })
-      }
-    }
-
-    return results
+    return out.slice(0, 40)
   }
 
   return { search }

@@ -1,5 +1,6 @@
 <template>
   <article class="wiki-page">
+    <p class="mem-id">MEM://history</p>
     <h1 class="wiki-page-title">История и хронология</h1>
     <p class="wiki-page-lead">
       Эпохи и ключевые события от Выхода Света до наших дней. Выберите период для подробного описания.

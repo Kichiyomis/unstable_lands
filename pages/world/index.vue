@@ -1,5 +1,6 @@
 <template>
   <article class="wiki-page">
+    <p class="mem-id">MEM://world</p>
     <h1 class="wiki-page-title">Мир</h1>
     <p class="wiki-page-lead">
       Общее описание сеттинга «Нестабильные Земли».

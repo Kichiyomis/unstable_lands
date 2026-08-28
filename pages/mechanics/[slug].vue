@@ -1,15 +1,19 @@
 <template>
   <article v-if="mechanic" class="wiki-page">
+    <p class="mem-id">MEM://mechanics/{{ mechanic.slug }}</p>
     <WikiImageBlock
       v-if="mechanic.image"
       :src="mechanic.image"
       :caption="mechanic.imageCaption"
     />
-    <WikiEntryIntro
-      :title="mechanic.name"
-      :lead="mechanic.short"
-      :description="mechanic.description"
-    />
+    <div class="dossier-layout">
+      <WikiEntryIntro
+        :title="mechanic.name"
+        :lead="mechanic.short"
+        :description="mechanic.description"
+      />
+      <WikiRelated :path="`/mechanics/${mechanic.slug}`" />
+    </div>
   </article>
   <article v-else class="wiki-page">
     <h1 class="wiki-page-title">Не найдено</h1>

@@ -62,6 +62,9 @@ if (process.client) {
   }
 
   onMounted(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const archive = document.documentElement.dataset.intensity === 'archive'
+    if (reduced || archive) return
     updateParallax()
     window.addEventListener('scroll', updateParallax, { passive: true })
     window.addEventListener('resize', updateParallax)
@@ -75,21 +78,34 @@ if (process.client) {
 </script>
 
 <style scoped>
+.wiki-image-block__img-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(5, 6, 10, 0.05) 40%, rgba(5, 6, 10, 0.72) 100%);
+}
+
 .wiki-image-block {
   margin: var(--space-4) 0;
-  width: max-content;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .wiki-image-block__img-wrap {
   position: relative;
-  width: auto;
-  height: 480px;
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  height: min(480px, 70vw);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid var(--color-border-muted);
+  border: 1px solid var(--color-border);
   background: var(--color-surface);
   /* «дыхание» свечения вокруг рамки — управляется JS-переменной --glow-breath */
-  box-shadow: 0 0 calc(18px * var(--glow-breath, 1)) rgba(25, 40, 72, 0.35);
+  box-shadow:
+    0 0 calc(18px * var(--glow-breath, 1)) rgba(126, 200, 200, 0.28),
+    0 18px 40px rgba(0, 0, 0, 0.55);
   transition:
     transform 0.25s ease-out,
     box-shadow 0.4s ease-in-out;
@@ -97,6 +113,7 @@ if (process.client) {
 
 .wiki-image-block__img {
   width: auto;
+  max-width: 100%;
   height: 100%;
   display: block;
   object-fit: cover;

@@ -1,48 +1,57 @@
 <template>
   <div class="home">
     <section class="hero">
+      <p class="mem-id">MEM://index</p>
       <div ref="accentLineEl" class="accent-line" style="margin-left: auto; margin-right: auto;" />
       <h1 class="hero__title">Нестабильные Земли</h1>
-      <p class="hero__tagline">
-        
-      </p>
+      <p class="hero__tagline">ALLMIND Memory Index</p>
       <p class="hero__desc">
-        Информационный портал по авторской D&D кампании: мир, персонажи, локации, история и механики.
+        Информационный портал по авторской D&amp;D кампании: мир, персонажи, локации, история и механики.
       </p>
+      <button type="button" class="hero__recall" @click="show()">
+        <AllmindIcon name="search" :size="18" />
+        Recall
+      </button>
     </section>
 
     <section class="sections">
-      <h2 class="wiki-section-heading">Разделы вики</h2>
+      <h2 class="wiki-section-heading">Разделы индекса</h2>
       <div ref="sectionsEl" class="section-cards section-cards--row">
-        <NuxtLink to="/world" class="section-card" v-tilt v-press-anim v-expand-link>
-          <h3 class="section-card__title">Мир</h3>
-          <p class="section-card__desc">Краткие описания мира</p>
+        <NuxtLink
+          v-for="section in sections"
+          :key="section.id"
+          :to="section.path"
+          class="section-card"
+          v-tilt
+          v-press-anim
+          v-expand-link
+        >
+          <span class="section-card__meta">{{ section.mem }}</span>
+          <h3 class="section-card__title">{{ section.title }}</h3>
+          <p class="section-card__desc">{{ section.short }}</p>
         </NuxtLink>
-        <NuxtLink to="/characters" class="section-card" v-tilt v-press-anim v-expand-link>
-          <h3 class="section-card__title">Персонажи</h3>
-          <p class="section-card__desc">Ключевые персонажи кампании</p>
-        </NuxtLink>
-        <NuxtLink to="/locations" class="section-card" v-tilt v-press-anim v-expand-link>
-          <h3 class="section-card__title">Локации</h3>
-          <p class="section-card__desc">Фрихольд и Кромка Теней</p>
-        </NuxtLink>
-        <NuxtLink to="/history" class="section-card" v-tilt v-press-anim v-expand-link>
-          <h3 class="section-card__title">История</h3>
-          <p class="section-card__desc">Хронология и эпохи: от Выхода Света до наших дней.</p>
-        </NuxtLink>
-        <NuxtLink to="/mechanics" class="section-card" v-tilt v-press-anim v-expand-link>
-          <h3 class="section-card__title">Механики</h3>
-          <p class="section-card__desc">Хобби (Пока что)</p>
-        </NuxtLink>
-        <NuxtLink to="/goods" class="section-card" v-tilt v-press-anim v-expand-link>
-          <h3 class="section-card__title">Товары</h3>
-          <p class="section-card__desc">Одноразовые предметы и расходники</p>
+      </div>
+    </section>
+
+    <section v-if="recent.length" class="random-section">
+      <h2 class="wiki-section-heading">Недавняя память</h2>
+      <div class="random-cards">
+        <NuxtLink
+          v-for="entry in recent.slice(0, 5)"
+          :key="entry.path"
+          :to="entry.path"
+          class="random-card wiki-card"
+          v-press-anim
+          v-expand-link
+        >
+          <span class="wiki-card__meta">{{ entry.typeLabel }}</span>
+          <span class="wiki-card__title">{{ entry.title }}</span>
         </NuxtLink>
       </div>
     </section>
 
     <section class="random-section">
-      <h2 class="wiki-section-heading">Случайные страницы</h2>
+      <h2 class="wiki-section-heading">Случайные фрагменты</h2>
       <div ref="randomCardsEl" class="random-cards">
         <NuxtLink
           v-for="(entry, index) in entries"
@@ -63,6 +72,11 @@
 </template>
 
 <script setup lang="ts">
+const { sections } = useWikiRegistry()
+const { show } = useRecall()
+const { recent, hydrate } = useMemory()
+const { canAnimate } = useIntensity()
+const { run } = useGsap()
 const randomEntries = useRandomWikiEntries(5)
 const activeRandomIndex = ref<number | null>(null)
 const sectionsEl = ref<HTMLElement | null>(null)
@@ -70,81 +84,55 @@ const randomCardsEl = ref<HTMLElement | null>(null)
 const accentLineEl = ref<HTMLElement | null>(null)
 
 const entries = computed(() => {
-  // поддержка как ref, так и прямого массива на всякий случай
   const value = (randomEntries as any).value ?? randomEntries
   return Array.isArray(value) ? value : []
 })
 
 let randomTimer: number | null = null
 
-onMounted(async () => {
+onMounted(() => {
+  hydrate()
   const tick = () => {
     const list = entries.value
     if (!list.length) return
     activeRandomIndex.value = Math.floor(Math.random() * list.length)
   }
-
   tick()
   randomTimer = window.setInterval(tick, 4500)
 
-  if (import.meta.client) {
-    try {
-      const mod = await import('gsap')
-      const gsap = mod.gsap
-
-      if (sectionsEl.value) {
-        const cards = sectionsEl.value.querySelectorAll<HTMLElement>('.section-card')
-        if (cards.length) {
-          gsap.from(cards, {
-            opacity: 0,
-            y: 16,
-            duration: 0.42,
-            ease: 'power2.out',
-            stagger: 0.05,
-          })
-        }
+  if (!canAnimate.value) return
+  run(({ gsap }) => {
+    if (sectionsEl.value) {
+      const cards = sectionsEl.value.querySelectorAll<HTMLElement>('.section-card')
+      if (cards.length) {
+        gsap.from(cards, { opacity: 0, y: 16, duration: 0.42, ease: 'power2.out', stagger: 0.05 })
       }
-
-      if (randomCardsEl.value) {
-        const cards = randomCardsEl.value.querySelectorAll<HTMLElement>('.random-card')
-        if (cards.length) {
-          gsap.from(cards, {
-            opacity: 0,
-            y: 18,
-            duration: 0.45,
-            ease: 'power2.out',
-            stagger: 0.06,
-            delay: 0.08,
-          })
-        }
-      }
-
-      if (accentLineEl.value) {
-        gsap.from(accentLineEl.value, {
-          duration: 0.7,
-          scaleX: 0,
-          opacity: 0,
-          ease: 'power3.out',
-          transformOrigin: '50% 50%',
-        })
-      }
-    } catch {
-      // gsap необязателен для работы страницы
     }
-  }
+    if (randomCardsEl.value) {
+      const cards = randomCardsEl.value.querySelectorAll<HTMLElement>('.random-card')
+      if (cards.length) {
+        gsap.from(cards, { opacity: 0, y: 18, duration: 0.45, ease: 'power2.out', stagger: 0.06, delay: 0.08 })
+      }
+    }
+    if (accentLineEl.value) {
+      gsap.from(accentLineEl.value, {
+        duration: 0.7,
+        scaleX: 0,
+        opacity: 0,
+        ease: 'power3.out',
+        transformOrigin: '50% 50%',
+      })
+    }
+  })
 })
 
 onBeforeUnmount(() => {
-  if (randomTimer != null) {
-    window.clearInterval(randomTimer)
-  }
+  if (randomTimer != null) window.clearInterval(randomTimer)
 })
 </script>
 
 <style scoped>
-.home {
-  padding-bottom: var(--space-6);
-}
+.home { padding-bottom: var(--space-6); }
 
 .hero {
   text-align: center;
@@ -153,57 +141,64 @@ onBeforeUnmount(() => {
   margin-bottom: var(--space-5);
 }
 
+.hero .mem-id { margin-bottom: var(--space-2); }
+
 .hero__title {
   font-family: var(--font-heading);
-  font-size: 2.5rem;
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
   color: var(--color-gold);
   margin: 0 0 0.5rem;
   letter-spacing: 0.02em;
 }
 
 .hero__tagline {
-  font-size: 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--color-argalius-bright);
   margin: 0 0 0.75rem;
-  font-style: italic;
 }
 
 .hero__desc {
   max-width: 560px;
-  margin: 0 auto;
+  margin: 0 auto 1.25rem;
   color: var(--color-text-muted);
   font-size: 0.98rem;
 }
 
-.sections {
-  margin-bottom: var(--space-6);
+.hero__recall {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  background: var(--color-gold-subtle);
+  border: 1px solid var(--color-gold-dim);
+  color: var(--color-gold);
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-/* В одну строку на широких экранах */
+.sections { margin-bottom: var(--space-6); }
+
 .section-cards--row {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(3, 1fr);
 }
 
 @media (max-width: 1100px) {
-  .section-cards--row {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .section-cards--row { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 520px) {
-  .section-cards--row {
-    grid-template-columns: 1fr;
-  }
+  .section-cards--row { grid-template-columns: 1fr; }
 }
 
-.section-cards--row .section-card {
-  padding: var(--space-3) var(--space-4);
-}
-
-/* Случайные — те же карточки */
 .random-section {
   padding-top: var(--space-4);
   border-top: 1px solid var(--color-border-muted);
+  margin-bottom: var(--space-4);
 }
 
 .random-cards {
@@ -213,15 +208,11 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
-  .random-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .random-cards { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 420px) {
-  .random-cards {
-    grid-template-columns: 1fr;
-  }
+  .random-cards { grid-template-columns: 1fr; }
 }
 
 .random-card {
@@ -229,35 +220,18 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-3) var(--space-4);
-  transition:
-    transform 0.18s ease-out,
-    box-shadow 0.18s ease-out,
-    border-color var(--transition),
-    background var(--transition);
 }
 
 .random-card .wiki-card__meta {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
-.random-card--pulse {
-  animation: random-card-pulse 0.9s ease-out;
-}
+.random-card--pulse { animation: random-card-pulse 0.9s ease-out; }
 
 @keyframes random-card-pulse {
-  0% {
-    transform: translateY(0) scale(1);
-    box-shadow: var(--shadow-soft);
-  }
-  35% {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 0 18px rgba(201, 162, 39, 0.25);
-  }
-  100% {
-    transform: translateY(0) scale(1);
-    box-shadow: var(--shadow-soft);
-  }
+  0%, 100% { transform: translateY(0); }
+  35% { transform: translateY(-3px); box-shadow: 0 0 18px rgba(126, 200, 200, 0.2); }
 }
 </style>

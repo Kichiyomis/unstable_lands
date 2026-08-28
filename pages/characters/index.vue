@@ -1,5 +1,6 @@
 <template>
   <article class="wiki-page">
+    <p class="mem-id">MEM://characters</p>
     <h1 class="wiki-page-title">Персонажи</h1>
     <p class="wiki-page-lead">
       Персонажи вселенной «Нестабильные Земли».
@@ -105,6 +106,8 @@ const groupedCharacters = computed(() => {
   return [...result, ...rest]
 })
 
+const { run } = useGsap()
+
 function thumbSrc (char: { image?: string; thumbnail?: string }) {
   const path = (char.thumbnail ?? char.image) ?? ''
   if (!path) return ''
@@ -112,4 +115,25 @@ function thumbSrc (char: { image?: string; thumbnail?: string }) {
   const p = path.startsWith('/') ? path : `/${path}`
   return baseURL + p
 }
+
+onMounted(() => {
+  run(({ gsap, ScrollTrigger }) => {
+    if (window.matchMedia('(max-width: 900px)').matches) return
+    const cards = document.querySelectorAll<HTMLElement>('.entry-card')
+    if (!cards.length) return
+    gsap.from(cards, {
+      opacity: 0,
+      y: 14,
+      duration: 0.36,
+      ease: 'power2.out',
+      stagger: 0.04,
+      scrollTrigger: {
+        trigger: '.entry-grid',
+        start: 'top 88%',
+        once: true,
+      },
+    })
+    void ScrollTrigger
+  })
+})
 </script>

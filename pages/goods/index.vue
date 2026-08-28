@@ -1,5 +1,6 @@
 <template>
   <article class="wiki-page goods-page">
+    <p class="mem-id">MEM://goods</p>
     <h1 class="wiki-page-title">Одноразовые товары</h1>
     <p class="wiki-page-lead">
       Справочник расходуемых предметов: фильтруйте по направлению, редкости и цене.
@@ -26,7 +27,9 @@
             :title="t.label"
             @click="themeFilter = t.id"
           >
-            <span class="goods-filter-theme__emoji" aria-hidden="true">{{ t.emoji }}</span>
+            <span class="goods-filter-theme__emoji" aria-hidden="true">
+              <AllmindIcon :name="themeIcons[t.id]" :size="18" />
+            </span>
             <span class="goods-filter-theme__text">{{ t.label }}</span>
           </button>
         </div>
@@ -151,6 +154,17 @@ import type { GoodThemeId, RarityLabel, TradeGood } from '~/data/goods'
 import { rarityRank, tradeGoods } from '~/data/goods'
 
 const { goodThemes, rarityLabels } = useGoods()
+
+const themeIcons = {
+  defense: 'shield',
+  movement: 'rocket',
+  skills: 'brain',
+  combat: 'sword',
+  stealth: 'mask',
+  alchemy: 'flask',
+  utility: 'puzzle',
+  spellstones: 'diamond',
+} as const
 
 function formatPrice (item: TradeGood): string {
   if (item.priceRange) {

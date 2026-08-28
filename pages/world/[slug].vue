@@ -1,15 +1,19 @@
 <template>
   <article v-if="entry" class="wiki-page">
+    <p class="mem-id">MEM://world/{{ entry.slug }}</p>
     <WikiImageBlock
       v-if="entry.image"
       :src="entry.image"
       :caption="entry.imageCaption"
     />
-    <WikiEntryIntro
-      :title="entry.name"
-      :lead="entry.short"
-      :description="entry.description"
-    />
+    <div class="dossier-layout">
+      <WikiEntryIntro
+        :title="entry.name"
+        :lead="entry.short"
+        :description="entry.description"
+      />
+      <WikiRelated :path="`/world/${entry.slug}`" />
+    </div>
   </article>
   <article v-else class="wiki-page">
     <h1 class="wiki-page-title">Не найдено</h1>

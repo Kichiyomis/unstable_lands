@@ -1,16 +1,20 @@
 <template>
   <article v-if="location" class="wiki-page">
+    <p class="mem-id">MEM://locations/{{ location.slug }}</p>
     <WikiImageBlock
       v-if="location.image"
       :src="location.image"
       :caption="location.imageCaption"
     />
-    <WikiEntryIntro
-      :title="location.name"
-      :meta="location.type"
-      :lead="location.short"
-      :description="location.description"
-    />
+    <div class="dossier-layout">
+      <WikiEntryIntro
+        :title="location.name"
+        :meta="location.type"
+        :lead="location.short"
+        :description="location.description"
+      />
+      <WikiRelated :path="`/locations/${location.slug}`" />
+    </div>
   </article>
   <article v-else class="wiki-page">
     <h1 class="wiki-page-title">Не найдено</h1>

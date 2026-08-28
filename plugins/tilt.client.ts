@@ -1,6 +1,9 @@
 export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.vueApp.directive('tilt', {
     mounted (el: HTMLElement, binding) {
+      if (import.meta.server) return
+      if (!window.matchMedia('(pointer: fine)').matches) return
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
       const maxTilt = typeof binding.value === 'number'
         ? binding.value
         : typeof binding.value?.max === 'number'

@@ -1,18 +1,5 @@
-export interface NavItem {
-  title: string
-  path: string
-  children?: { title: string; path: string }[]
-}
-
 export function useNavigation () {
-  const navItems: NavItem[] = [
-    { title: 'Мир', path: '/world' },
-    { title: 'Персонажи', path: '/characters' },
-    { title: 'Локации', path: '/locations' },
-    { title: 'История', path: '/history' },
-    { title: 'Механики', path: '/mechanics' },
-    { title: 'Товары', path: '/goods' },
-  ]
-
+  const { sections } = useWikiRegistry()
+  const navItems = sections.map(s => ({ title: s.title, path: s.path }))
   return { navItems }
 }

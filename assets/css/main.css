@@ -1,44 +1,58 @@
-/* Нестабильные Земли — единая дизайн-система вики */
+/* Нестабильные Земли — ALLMIND Memory Index */
 :root {
   --container: 1220px;
-  /* Палитра */
-  --color-bg: #0a0c14;
-  --color-bg-elevated: #0f111c;
-  --color-bg-card: #141824;
-  --color-surface: #181c2c;
-  --color-border: #252b42;
-  --color-border-muted: #1a1f32;
-  --color-gold: #c9a227;
-  --color-gold-dim: #9a7b1a;
-  --color-gold-subtle: rgba(201, 162, 39, 0.12);
-  --color-light: #e8e0d0;
-  --color-argalius: #4a7cba;
-  --color-argalius-bright: #6b9ed9;
-  --color-argalius-subtle: rgba(74, 124, 186, 0.12);
-  --color-text: #d4d0e2;
-  --color-text-muted: #7e7898;
+  --dock-height: 4.25rem;
+  --status-height: 1.75rem;
+  --header-height: 3.75rem;
+
+  --color-bg: #05060a;
+  --color-bg-elevated: #0a0d14;
+  --color-bg-card: #0e1218;
+  --color-surface: #141a22;
+  --color-border: #2a3344;
+  --color-border-muted: #1c2430;
+  --color-gold: #e8c872;
+  --color-gold-dim: #c4a45a;
+  --color-gold-subtle: rgba(232, 200, 114, 0.12);
+  --color-light: #f4efe4;
+  --color-argalius: #7ec8c8;
+  --color-argalius-bright: #9ed9d9;
+  --color-argalius-subtle: rgba(126, 200, 200, 0.14);
+  --color-distortion: #e85a7a;
+  --color-text: #e6e4dc;
+  --color-text-muted: #9aa3b2;
   --color-link: var(--color-argalius-bright);
   --color-link-hover: var(--color-gold);
-  /* Типографика */
-  --font-body: 'Source Serif 4', 'Crimson Pro', Georgia, serif;
-  --font-heading: 'Cinzel', 'Uncial Antiqua', serif;
-  --font-ui: 'DM Sans', system-ui, sans-serif;
+
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-heading: 'Unbounded', 'IBM Plex Sans', sans-serif;
+  --font-ui: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace;
   --text-base: 1.0625rem;
   --line-tight: 1.35;
   --line-normal: 1.65;
-  /* Шкала отступов */
+  --text-scale: 100%;
+
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 1rem;
   --space-4: 1.5rem;
   --space-5: 2rem;
   --space-6: 2.5rem;
-  /* Оформление */
-  --radius: 8px;
-  --radius-lg: 12px;
-  --shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-  --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.45);
-  --transition: 0.2s ease;
+
+  --radius: 2px;
+  --radius-lg: 4px;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --shadow-hover: 0 0 24px rgba(126, 200, 200, 0.12);
+  --transition: 0.18s ease;
+  --hud-line: 1px solid rgba(126, 200, 200, 0.35);
+}
+
+html[data-text-scale='115'] { --text-scale: 115%; }
+html[data-text-scale='130'] { --text-scale: 130%; }
+
+html[data-intensity='archive'] {
+  --transition: 0.01s linear;
 }
 
 *,
@@ -51,15 +65,23 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Резервируем место под скроллбар, чтобы контент не прыгал при его появлении */
   scrollbar-gutter: stable;
   overflow-x: hidden;
+  touch-action: manipulation;
+  scroll-padding-top: calc(var(--status-height) + var(--header-height) + 0.5rem);
+  scroll-padding-bottom: calc(var(--dock-height) + env(safe-area-inset-bottom, 0px) + 0.75rem);
+}
+
+@media (min-width: 901px) {
+  html {
+    scroll-padding-bottom: 1.5rem;
+  }
 }
 
 body {
   margin: 0;
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: calc(var(--text-base) * var(--text-scale) / 100);
   line-height: var(--line-normal);
   color: var(--color-text);
   background: var(--color-bg);
@@ -72,34 +94,47 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    linear-gradient(180deg, transparent 0%, rgba(15, 17, 28, 0.5) 100%),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0px,
-      transparent 1px,
-      rgba(74, 124, 186, 0.025) 1px,
-      rgba(74, 124, 186, 0.025) 2px
-    );
+    radial-gradient(1200px 600px at 80% -10%, rgba(126, 200, 200, 0.06), transparent 55%),
+    radial-gradient(900px 500px at 0% 100%, rgba(232, 200, 114, 0.04), transparent 50%),
+    linear-gradient(180deg, transparent 0%, rgba(5, 6, 10, 0.4) 100%);
   pointer-events: none;
   z-index: 0;
 }
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+html[data-intensity='operator'] body::after { opacity: 0.045; }
+html[data-intensity='spectacle'] body::after { opacity: 0.07; }
+html[data-intensity='archive'] body::after { display: none; }
 
 a {
   color: var(--color-link);
   text-decoration: none;
   transition: color var(--transition);
+  cursor: pointer;
 }
 
-a:hover {
-  color: var(--color-link-hover);
-}
+a:hover { color: var(--color-link-hover); }
 
-a:focus-visible {
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
   outline: 2px solid var(--color-gold-dim);
   outline-offset: 2px;
 }
 
-/* ——— Единая типографика ——— */
+button { cursor: pointer; font-family: inherit; }
+
 h1, h2, h3, h4 {
   font-family: var(--font-heading);
   font-weight: 600;
@@ -111,7 +146,6 @@ h1 { font-size: 1.75rem; letter-spacing: 0.02em; }
 h2 { font-size: 1.375rem; margin-top: 0; }
 h3 { font-size: 1.125rem; margin-top: 0; }
 
-/* Заголовок страницы вики (один стиль для всех разделов) */
 .wiki-page-title {
   font-family: var(--font-heading);
   font-size: 1.75rem;
@@ -120,38 +154,35 @@ h3 { font-size: 1.125rem; margin-top: 0; }
   color: var(--color-light);
   margin: 0 0 var(--space-2);
   padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--color-border-muted);
+  border-bottom: var(--hud-line);
 }
 
-/* Подзаголовок / описание под заголовком */
 .wiki-page-lead {
   font-size: 1rem;
   color: var(--color-text-muted);
   line-height: 1.6;
   margin: 0 0 var(--space-4);
-  max-width: 60ch;
+  max-width: 62ch;
 }
 
-/* Заголовок секции (Разделы вики, Случайные страницы, списки) */
-.wiki-section-heading {
-  font-family: var(--font-ui);
-  font-size: 0.8125rem;
-  font-weight: 600;
+.wiki-section-heading,
+.wiki-filter-group-title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
+  letter-spacing: 0.14em;
+  color: var(--color-argalius);
   margin: 0 0 var(--space-3);
 }
 
-/* Мета-строка (тип, годы, роль) */
 .wiki-meta {
-  font-family: var(--font-ui);
-  font-size: 0.8125rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   color: var(--color-argalius-bright);
   margin: 0 0 var(--space-1);
 }
 
-/* ——— Контейнер ——— */
 .wiki-content,
 .container {
   max-width: var(--container);
@@ -165,23 +196,57 @@ h3 { font-size: 1.125rem; margin-top: 0; }
 
 .wiki-content {
   padding-top: var(--space-4);
-  padding-bottom: var(--space-6);
+  padding-bottom: calc(var(--space-6) + var(--dock-height) + env(safe-area-inset-bottom, 0px));
 }
 
-/* ——— Единая карточка-ссылка (списки и главная) ——— */
-.wiki-card {
+@media (min-width: 901px) {
+  .wiki-content {
+    padding-bottom: var(--space-6);
+  }
+}
+
+.wiki-card,
+.section-card,
+.entry-card {
+  position: relative;
   display: block;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border-muted);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+  clip-path: polygon(
+    8px 0, calc(100% - 8px) 0, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) 100%,
+    8px 100%, 0 calc(100% - 8px), 0 8px
+  );
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition),
+    background var(--transition),
+    transform var(--transition);
 }
 
-.wiki-card:hover {
-  border-color: var(--color-gold-dim);
+.wiki-card:hover,
+.section-card:hover,
+.entry-card:hover {
+  border-color: var(--color-argalius);
   box-shadow: var(--shadow-hover);
   background: var(--color-surface);
+}
+
+.wiki-card::before,
+.section-card::before,
+.entry-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow:
+    inset 10px 0 0 -8px var(--color-argalius),
+    inset -10px 0 0 -8px var(--color-argalius),
+    inset 0 10px 0 -8px var(--color-gold-dim),
+    inset 0 -10px 0 -8px var(--color-gold-dim);
+  opacity: 0.55;
 }
 
 .wiki-card__media {
@@ -202,11 +267,11 @@ h3 { font-size: 1.125rem; margin-top: 0; }
   object-fit: cover;
 }
 
-.wiki-card__body {
-  padding: var(--space-3) var(--space-4);
-}
+.wiki-card__body { padding: var(--space-3) var(--space-4); }
 
-.wiki-card__title {
+.wiki-card__title,
+.section-card__title,
+.entry-card__title {
   font-family: var(--font-heading);
   font-size: 1.0625rem;
   font-weight: 600;
@@ -215,69 +280,56 @@ h3 { font-size: 1.125rem; margin-top: 0; }
   line-height: 1.3;
 }
 
-.wiki-card:hover .wiki-card__title {
+.wiki-card:hover .wiki-card__title,
+.section-card:hover .section-card__title,
+.entry-card:hover .entry-card__title {
   color: var(--color-gold);
 }
 
-.wiki-card__meta {
-  font-family: var(--font-ui);
-  font-size: 0.8125rem;
+.wiki-card__meta,
+.wiki-card__meta-line,
+.section-card__meta,
+.entry-card__meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   color: var(--color-argalius-bright);
   margin: 0 0 var(--space-1);
 }
 
-.wiki-card__desc {
+.wiki-card__desc,
+.section-card__desc {
   font-size: 0.875rem;
   color: var(--color-text-muted);
   margin: 0;
   line-height: 1.5;
 }
 
-/* Сетка карточек */
 .wiki-grid {
   display: grid;
   gap: var(--space-3);
 }
 
-.wiki-grid--list {
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-}
-
-.wiki-grid--list-wide {
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-}
+.wiki-grid--list { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.wiki-grid--list-wide { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 
 @media (max-width: 640px) {
-  .wiki-grid--list {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
+  .wiki-grid--list { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 }
 
-/* ——— Кнопка / ссылка «Назад» ——— */
 .wiki-back-link {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  font-family: var(--font-ui);
-  font-size: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
   color: var(--color-text-muted);
   margin-top: var(--space-4);
-  transition: color var(--transition);
 }
 
-.wiki-back-link:hover {
-  color: var(--color-gold);
-}
+.wiki-back-link:hover { color: var(--color-gold); }
 
-/* ——— Страница вики (контент) ——— */
-.wiki-page {
-  padding-bottom: var(--space-6);
-}
-
-.wiki-page h1 {
-  margin-top: 0;
-}
-
+.wiki-page { padding-bottom: var(--space-6); }
+.wiki-page h1 { margin-top: 0; }
 .wiki-page h2 {
   margin-top: var(--space-5);
   margin-bottom: var(--space-2);
@@ -286,59 +338,20 @@ h3 { font-size: 1.125rem; margin-top: 0; }
   color: var(--color-gold);
 }
 
-/* Проза (текст статей) */
-.wiki-prose {
-  line-height: 1.7;
-}
-
-.wiki-prose p {
-  margin: 0 0 var(--space-3);
-}
-
-.wiki-prose p:last-child {
-  margin-bottom: 0;
-}
-
-.wiki-prose strong {
-  color: var(--color-light);
-}
-
-/* Контент из v-html (description и т.д.) */
-.wiki-prose--html {
-  line-height: 1.7;
-}
-
-.wiki-prose--html p {
-  margin: 0 0 var(--space-3);
-}
-
-.wiki-prose--html p:last-child {
-  margin-bottom: 0;
-}
-
-.wiki-prose--html a {
-  color: var(--color-argalius-bright);
-}
-
-.wiki-prose--html a:hover {
-  color: var(--color-gold);
-}
-
-.wiki-prose--html strong {
-  color: var(--color-light);
-}
-
+.wiki-prose,
+.wiki-prose--html { line-height: 1.7; }
+.wiki-prose p,
+.wiki-prose--html p { margin: 0 0 var(--space-3); }
+.wiki-prose p:last-child,
+.wiki-prose--html p:last-child { margin-bottom: 0; }
+.wiki-prose strong,
+.wiki-prose--html strong { color: var(--color-light); }
+.wiki-prose--html a { color: var(--color-argalius-bright); }
+.wiki-prose--html a:hover { color: var(--color-gold); }
 .wiki-prose--html ul,
-.wiki-prose--html ol {
-  margin: 0 0 var(--space-3);
-  padding-left: 1.25rem;
-}
+.wiki-prose--html ol { margin: 0 0 var(--space-3); padding-left: 1.25rem; }
+.wiki-prose--html li { margin-bottom: var(--space-1); }
 
-.wiki-prose--html li {
-  margin-bottom: var(--space-1);
-}
-
-/* Блоки внутри статьи (Описание, Биография и т.д.) */
 .wiki-block {
   margin-top: var(--space-4);
   padding-top: var(--space-3);
@@ -353,124 +366,34 @@ h3 { font-size: 1.125rem; margin-top: 0; }
   margin: 0 0 var(--space-2);
 }
 
-.wiki-block p {
-  margin: 0;
-  line-height: 1.65;
-}
-
-/* Акцентная линия — перелив цветов справа налево + мягкое свечение (бесшовный цикл) */
 @keyframes accent-line-flow {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 100% 50%;
-  }
-}
-
-/* Свечение в такт линии: золото → синий → золото, те же 5s */
-@keyframes accent-line-glow {
-  0%,
-  100% {
-    box-shadow:
-      0 0 12px rgba(201, 162, 39, 0.45),
-      0 0 28px rgba(201, 162, 39, 0.28),
-      0 0 42px rgba(201, 162, 39, 0.14),
-      0 0 50px rgba(74, 124, 186, 0.12);
-  }
-  50% {
-    box-shadow:
-      0 0 12px rgba(74, 124, 186, 0.45),
-      0 0 28px rgba(74, 124, 186, 0.28),
-      0 0 42px rgba(74, 124, 186, 0.14),
-      0 0 50px rgba(201, 162, 39, 0.12);
-  }
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
 }
 
 .accent-line {
-  height: 3px;
-  /* Один период: золото → синий → золото; вторая половина повторяет первую — цикл без рывка */
-  background: linear-gradient(
-    90deg,
-    var(--color-gold) 0%,
-    var(--color-argalius) 25%,
-    var(--color-gold) 50%,
-    var(--color-argalius) 75%,
-    var(--color-gold) 100%
-  );
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-gold) 0%, var(--color-argalius) 50%, var(--color-gold) 100%);
   background-size: 200% 100%;
-  background-position: 0% 50%;
-  animation: accent-line-flow 5s linear infinite, accent-line-glow 5s linear infinite;
-  border-radius: 2px;
+  animation: accent-line-flow 8s linear infinite;
+  border-radius: 0;
   margin: var(--space-3) 0;
-  max-width: 200px;
+  max-width: 220px;
 }
 
-/* Классы для главной и списков (тот же визуал, что .wiki-card) */
+html[data-intensity='archive'] .accent-line { animation: none; }
+
 .section-cards {
   display: grid;
   gap: var(--space-3);
 }
 
-.section-card {
-  display: block;
-  padding: var(--space-3) var(--space-4);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border-muted);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition:
-    border-color var(--transition),
-    box-shadow var(--transition),
-    background var(--transition),
-    transform 0.18s ease-out;
-}
-
-.section-card__title {
-  font-family: var(--font-heading);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--color-light);
-  margin: 0 0 var(--space-1);
-  line-height: 1.3;
-  transition: color var(--transition);
-}
-
-.section-card:hover .section-card__title {
-  color: var(--color-gold);
-}
-
-.section-card__desc {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-  margin: 0;
-  line-height: 1.5;
-}
-
-.section-card__meta {
-  font-family: var(--font-ui);
-  font-size: 0.8125rem;
-  color: var(--color-argalius-bright);
-  margin: 0 0 var(--space-1);
-}
+.section-card { padding: var(--space-3) var(--space-4); }
 
 .entry-grid {
   display: grid;
   gap: var(--space-3);
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-}
-
-.entry-card {
-  display: block;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border-muted);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition:
-    border-color var(--transition),
-    box-shadow var(--transition),
-    background var(--transition),
-    transform 0.18s ease-out;
 }
 
 .entry-card__thumb {
@@ -482,7 +405,7 @@ h3 { font-size: 1.125rem; margin-top: 0; }
   color: var(--color-gold-dim);
   font-family: var(--font-heading);
   font-size: 2.25rem;
-  line-height: 1;
+  position: relative;
 }
 
 .entry-card__thumb img {
@@ -493,44 +416,14 @@ h3 { font-size: 1.125rem; margin-top: 0; }
 
 .entry-card__thumb--empty {
   background:
-    radial-gradient(circle at 20% 0%, rgba(201, 162, 39, 0.22), transparent 55%),
-    radial-gradient(circle at 80% 100%, rgba(74, 124, 186, 0.28), transparent 55%),
+    radial-gradient(circle at 20% 0%, rgba(232, 200, 114, 0.18), transparent 55%),
+    radial-gradient(circle at 80% 100%, rgba(126, 200, 200, 0.22), transparent 55%),
     var(--color-surface);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
-    0 0 24px rgba(0, 0, 0, 0.6);
 }
 
-.entry-card__body {
-  padding: var(--space-3) var(--space-4);
-}
+.entry-card__body { padding: var(--space-3) var(--space-4); }
+.entry-card--no-image .entry-card__body { padding: var(--space-4); }
 
-.entry-card--no-image .entry-card__body {
-  padding: var(--space-4);
-}
-
-.entry-card__title {
-  font-family: var(--font-heading);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--color-light);
-  margin: 0 0 var(--space-1);
-  line-height: 1.3;
-  transition: color var(--transition);
-}
-
-.entry-card:hover .entry-card__title {
-  color: var(--color-gold);
-}
-
-.entry-card__meta {
-  font-family: var(--font-ui);
-  font-size: 0.8125rem;
-  color: var(--color-argalius-bright);
-  margin: 0;
-}
-
-/* Фильтры и заголовки групп в списках (персонажи, локации, мир, история) */
 .wiki-filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -539,44 +432,163 @@ h3 { font-size: 1.125rem; margin-top: 0; }
 }
 
 .wiki-filter-chip {
-  border: 1px solid var(--color-border-muted);
-  border-radius: 999px;
-  padding: 0.25rem 0.85rem;
-  font-family: var(--font-ui);
-  font-size: 0.8125rem;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  padding: 0.4rem 0.85rem;
+  min-height: 44px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   background: transparent;
   color: var(--color-text-muted);
-  cursor: pointer;
-  transition:
-    background var(--transition),
-    color var(--transition),
-    border-color var(--transition),
-    box-shadow var(--transition);
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
 
 .wiki-filter-chip--active {
   border-color: var(--color-gold-dim);
-  background: rgba(201, 162, 39, 0.12);
+  background: var(--color-gold-subtle);
   color: var(--color-gold);
-  box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.16);
 }
 
-.wiki-filter-group {
-  margin-bottom: var(--space-4);
+.wiki-filter-group { margin-bottom: var(--space-4); }
+
+@media (max-width: 640px) {
+  .entry-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 }
 
-.wiki-filter-group-title {
-  font-family: var(--font-ui);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-transform: uppercase;
+.mem-id {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
   letter-spacing: 0.08em;
-  color: var(--color-text-muted);
+  text-transform: uppercase;
+  color: var(--color-argalius);
   margin: 0 0 var(--space-2);
 }
 
-@media (max-width: 640px) {
-  .entry-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+.dossier-layout {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 960px) {
+  .dossier-layout {
+    grid-template-columns: minmax(0, 1fr) 220px;
+    align-items: start;
   }
+}
+
+.wiki-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 var(--space-3);
+}
+
+.wiki-toc a {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-muted);
+  padding: 0.45rem 0.65rem;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.wiki-toc a:hover { color: var(--color-gold); border-color: var(--color-gold-dim); }
+
+.wiki-related {
+  border: 1px solid var(--color-border-muted);
+  padding: var(--space-3);
+  background: var(--color-bg-elevated);
+}
+
+@media (min-width: 960px) {
+  .wiki-toc {
+    position: sticky;
+    top: calc(var(--status-height) + var(--header-height));
+    z-index: 6;
+    background: var(--color-bg);
+    padding: 0.4rem 0;
+  }
+
+  .wiki-related {
+    position: sticky;
+    top: calc(var(--status-height) + var(--header-height) + 0.5rem);
+  }
+}
+
+.wiki-related h2 {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-argalius);
+  margin: 0 0 var(--space-2);
+  border: 0;
+  padding: 0;
+}
+
+.wiki-related a {
+  display: block;
+  font-size: 0.875rem;
+  padding: 0.35rem 0;
+  color: var(--color-light);
+}
+
+.wiki-vt-active {
+  view-transition-name: wiki-card;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.22s;
+}
+
+::view-transition-old(wiki-card),
+::view-transition-new(wiki-card) {
+  animation-duration: 0.35s;
+  mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+html[data-intensity='archive'] .page-enter-active,
+html[data-intensity='archive'] .page-leave-active {
+  transition-duration: 0.08s;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

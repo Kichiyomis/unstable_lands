@@ -10,6 +10,8 @@ export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.vueApp.directive('press-anim', {
     mounted (el: HTMLElement, binding: DirectiveBinding<PressAnimOptions | undefined>) {
       if (import.meta.server) return
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+      if (document.documentElement.dataset.intensity === 'archive') return
 
       const opts = binding.value ?? {}
       const computed = window.getComputedStyle(el)
@@ -18,7 +20,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       const baseBorderColor = computed.borderColor
       const activeShadow =
         opts.highlightColor ??
-        '0 0 26px rgba(201, 162, 39, 0.42)'
+        '0 0 26px rgba(126, 200, 200, 0.28)'
 
       const state: any = {
         baseShadow,
@@ -36,7 +38,7 @@ export default defineNuxtPlugin((nuxtApp) => {
           y: -3,
           scale: 1.01,
           boxShadow: activeShadow,
-          borderColor: 'var(--color-gold-dim)',
+          borderColor: 'var(--color-argalius)',
           backgroundColor: baseBg === 'rgba(0, 0, 0, 0)' ? 'var(--color-surface)' : baseBg,
           ease: 'power2.out',
         })

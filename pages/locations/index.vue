@@ -1,5 +1,6 @@
 <template>
   <article class="wiki-page">
+    <p class="mem-id">MEM://locations</p>
     <h1 class="wiki-page-title">Локации</h1>
     <p class="wiki-page-lead">
       Ключевые места сеттинга: описание, обитатели, события и связанные квесты. Выберите локацию для подробного описания.

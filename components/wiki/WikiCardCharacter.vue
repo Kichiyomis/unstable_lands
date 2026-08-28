@@ -75,7 +75,7 @@ const displacementEl = ref<SVGFEDisplacementMapElement | null>(null)
 if (import.meta.client) {
   const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
   const isNarrow = window.innerWidth < 768
-  const enableFog = !prefersReducedMotion && !isNarrow
+  const enableFog = !prefersReducedMotion && !isNarrow && document.documentElement.dataset.intensity === 'spectacle'
   let bodyObserver: IntersectionObserver | null = null
   let resizeRaf = 0
   let lineNodes: HTMLElement[] = []

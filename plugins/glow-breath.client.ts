@@ -1,39 +1,58 @@
 export default defineNuxtPlugin(() => {
-  if (process.server) {
-    return
-  }
+  if (process.server) return
 
   let frameId: number | null = null
+  let start = 0
 
-  const loop = (start: number) => {
-    const step = (now: number) => {
-      const t = (now - start) / 1000
-      const value = 0.7 + 0.3 * Math.sin(t / 2) // очень медленное «дыхание»
-      document.documentElement.style.setProperty('--glow-breath', value.toFixed(3))
-      frameId = window.requestAnimationFrame(step)
+  const stop = () => {
+    if (frameId != null) {
+      cancelAnimationFrame(frameId)
+      frameId = null
     }
-
-    frameId = window.requestAnimationFrame(step)
+    start = 0
+    document.documentElement.style.setProperty('--glow-breath', '1')
   }
 
-  if (document.readyState === 'loading') {
-    window.addEventListener(
-      'DOMContentLoaded',
-      () => {
-        loop(performance.now())
-      },
-      { once: true },
-    )
-  } else {
-    loop(performance.now())
+  const tick = (now: number) => {
+    if (document.hidden) {
+      frameId = window.requestAnimationFrame(tick)
+      return
+    }
+    if (!shouldRun()) {
+      stop()
+      return
+    }
+    if (!start) start = now
+    const t = (now - start) / 1000
+    const value = 0.7 + 0.3 * Math.sin(t / 2)
+    document.documentElement.style.setProperty('--glow-breath', value.toFixed(3))
+    frameId = window.requestAnimationFrame(tick)
   }
+
+  function shouldRun () {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
+    const mode = document.documentElement.dataset.intensity
+    return mode === 'operator' || mode === 'spectacle'
+  }
+
+  function sync () {
+    if (shouldRun()) {
+      if (frameId == null) frameId = window.requestAnimationFrame(tick)
+    } else {
+      stop()
+    }
+  }
+
+  sync()
+  const observer = new MutationObserver(sync)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-intensity'] })
+  document.addEventListener('visibilitychange', sync)
 
   if (import.meta.hot) {
     import.meta.hot.dispose(() => {
-      if (frameId != null) {
-        cancelAnimationFrame(frameId)
-      }
+      observer.disconnect()
+      document.removeEventListener('visibilitychange', sync)
+      stop()
     })
   }
 })
-
